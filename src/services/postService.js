@@ -53,15 +53,16 @@ export const fetchPost = async (req, res) => {
 };
 
 export const postTimeline = async (req, res) => {
-  const { user_id } = req.body;
-  if (!user_id) {
-    return res.status(400).json({ message: "Missing user id." });
+  const { page } = req.body;
+  if (!page) {
+    return res.status(400).json({ message: "Missing page." });
   }
   try {
+    const num_post = 10;
     const pipeline = [
       { $project: { img_url: 1, bio: 1 } },
-      { $skip: 20 },
-      { $limit: 10 },
+      { $skip: num_post * parseInt(page) },
+      { $limit: num_post },
     ];
     const posts = await post_model.aggregate(pipeline);
     return res.status(200).json(posts);
