@@ -4,34 +4,29 @@ import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
 import mongoose from "mongoose";
-import jwt from "jsonwebtoken";
-import { urlencoded } from "express";
-import { json } from "express/lib/response";
 import cors from "cors";
-import cookieparser from "cookie-parser";
+import cookieParser from "cookie-parser";
+import { verifyToken } from "./middleware/JwtAuth";
 
 const app = express();
 
 //settings
 const port = process.env.PORT || 8080;
-app.use(express.json());
+app.use(express.json(50));
 
 //routes
 import userRouter from "./routes/users";
 import postRouter from "./routes/posts";
 
 // Middleware
-app.use(urlencoded({ extended: false }));
-app.use(json);
-app.use(cookieparser());
+app.use(cookieParser());
 app.use(cors());
 
+app.use("/users", userRouter);
 app.use("/posts", postRouter);
 
 //Middleware routs
-app.get("/  ", (req, res) => {
-  res.json({ Status: true, Message: "Works" });
-});
+app.all("*", verifyToken);
 
 // DB configuration and connection create
 mongoose.connect(process.env.URL || "mongodb://localhost:27017/pischar", {
