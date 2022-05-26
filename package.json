@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon --exec babel-node src/app.js",
     "lint": "eslint .  --ext .js",
-    "pretty": "prettier --write ."
+    "pretty": "prettier --write .",
+    "docker": "docker-compose up -d --build"
   },
   "keywords": [],
   "author": "",
