@@ -34,7 +34,9 @@ app.get("/  ", (req, res) => {
 });
 
 // DB configuration and connection create
-mongoose.connect(process.env.URL || "mongodb://localhost:27017/pischar", { useNewUrlParser: true });
+mongoose.connect(process.env.URL || "mongodb://localhost:27017/pischar", {
+  useNewUrlParser: true,
+});
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
 db.once("open", function () {
