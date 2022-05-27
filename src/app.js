@@ -17,6 +17,7 @@ app.use(express.json(50));
 //routes
 import userRouter from "./routes/users";
 import postRouter from "./routes/posts";
+import followRouter from "./routes/follows";
 
 // Middleware
 app.use(cookieParser());
@@ -24,6 +25,7 @@ app.use(cors());
 
 app.use("/users", userRouter);
 app.use("/posts", postRouter);
+app.use("/follows", followRouter);
 
 //Middleware routs
 app.all("*", verifyToken);

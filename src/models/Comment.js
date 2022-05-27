@@ -4,6 +4,11 @@ const { Schema, model } = mongoose;
 
 const comment = new Schema(
   {
+    user_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "User",
+    },
     post_id: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,

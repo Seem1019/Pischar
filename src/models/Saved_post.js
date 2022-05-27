@@ -2,21 +2,20 @@ import mongoose from "mongoose";
 
 const { Schema, model } = mongoose;
 
-const follow = new Schema(
+const saved_post = new Schema(
   {
-    followed_id: {
+    post_id: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      ref: "User",
+      red: "Post",
     },
-    follower_id: {
+    user_id: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      ref: "User",
+      red: "User",
     },
-    accepted: { type: Boolean, required: true, default: false },
   },
   { versionKey: false }
 );
 
-export default model("Follow", follow);
+export default model("Saved_Post", saved_post);
