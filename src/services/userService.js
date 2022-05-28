@@ -114,7 +114,7 @@ export const getUserInfo = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
     const pipeline = getPipeline(user);
-    const userInfo = await (await User.aggregate(pipeline)).pop();
+    const userInfo = (await User.aggregate(pipeline)).pop();
     return res.status(200).json(userInfo);
   } catch (error) {
     return res.status(500).json(error.message);
