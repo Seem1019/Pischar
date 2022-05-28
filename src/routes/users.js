@@ -3,7 +3,7 @@ import * as UserService from "../services/userService.js";
 
 const router = Router();
 
-//router.get("/", UserService.fetchUser);
+router.get("/", UserService.getUserInfo);
 
 router.post("/", UserService.register);
 
