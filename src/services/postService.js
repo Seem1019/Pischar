@@ -5,6 +5,7 @@ import { getUserId } from "../utils/jwt.js";
 import saved_model from "../models/Saved_post.js";
 import user_model from "../models/User.js";
 import follow_model from "../models/Follow.js";
+import mongoose from "mongoose";
 
 export const postPost = async (req, res) => {
   if (req.body.img_url && req.body.bio && req.body.author) {
@@ -69,16 +70,16 @@ const fetchPost = async (req, res) => {
 };
 
 export const postTimeline = async (req, res) => {
-  const { user_id, page } = req.body;
-  if (!page) {
-    return res.status(400).json({ message: "Missing page." });
+  const page = parseInt(req.body.page);
+  if (typeof page !== "number") {
+    return res.status(400).json({ message: "Missing or invalid page." });
   }
   try {
-    const num_post = 10;
+    const user_id = getUserId(req);
+    const num_post = 5;
     const pipeline = [
-      { $match: { user_id } },
-      { $project: { img_url: 1, bio: 1, author: 1 } },
-      { $skip: num_post * parseInt(page) },
+      { $match: { author: mongoose.Types.ObjectId(user_id) } },
+      { $skip: num_post * page },
       { $limit: num_post },
     ];
     const posts = await post_model.aggregate(pipeline);
@@ -98,7 +99,7 @@ export const likePost = async (req, res) => {
     const like = await like_model.findOne({ post_id, user_id });
     like
       ? await like_model.deleteOne(like)
-      : await like_model.create({ post_id, user_id });
+      : await like_model.create({ post_id: post_id, user_id: user_id });
     return res.status(200).json({});
   } catch (error) {
     return res.status(500).json(error);
@@ -125,8 +126,23 @@ export const savePost = async (req, res) => {
 export const savedPosts = async (req, res) => {
   try {
     const user_id = getUserId(req);
-    const post_ids = await saved_model.find({ user_id });
-    const posts = await post_model.find({ _id: { $in: post_ids.post_id } });
+    const posts = await saved_model.aggregate([
+      { $match: { user_id: mongoose.Types.ObjectId(user_id) } },
+      {
+        $lookup: {
+          from: "posts",
+          localField: "post_id",
+          foreignField: "_id",
+          as: "posts",
+        },
+      },
+      { $project: { posts: 1 } },
+      {
+        $unwind: {
+          path: "$posts",
+        },
+      },
+    ]);
     return res.status(200).json(posts);
   } catch (error) {
     return res.status(500).json(error);
@@ -141,9 +157,24 @@ export const likedPosts = async (req, res) => {
       .findById(user_id)
       .select("visible_likes");
     if (logged_user_id === user_id || user_permit.visible_likes) {
-      const post_ids = await like_model.find({ user_id }).select("post_id");
-      const posts = await post_model.find({ _id: { $in: post_ids.post_id } });
-      return res.status(200).json(posts);
+      const posts = await like_model.aggregate([
+        { $match: { user_id: mongoose.Types.ObjectId(user_id) } },
+        {
+          $lookup: {
+            from: "posts",
+            localField: "post_id",
+            foreignField: "_id",
+            as: "posts",
+          },
+        },
+        { $project: { _id: 0, posts: 1 } },
+        { $unwind: { path: "$posts" } },
+      ]);
+      return res.status(200).json(
+        posts.map((x) => {
+          return x.posts;
+        })
+      );
     }
     return res
       .status(403)
