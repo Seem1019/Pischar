@@ -13,9 +13,15 @@ export const fetchFollowers = async (req, res) => {
     });
     if (following || user_id === logged_user_id) {
       const follower_users = await follow_model.find({ followed_id: user_id });
-      const users = await user_model.find({
-        _id: { $in: follower_users.follower_id },
-      });
+      const users = await user_model
+        .find({
+          _id: {
+            $in: follower_users.map((x) => {
+              return x.follower_id;
+            }),
+          },
+        })
+        .select("-password -email -birthDate -visible_likes");
       return res.status(200).json(users);
     } else {
       return res.status(403).json({ message: "Not following selected user." });
@@ -36,9 +42,15 @@ export const fetchFollowing = async (req, res) => {
     });
     if (following || user_id === logged_user_id) {
       const followed_users = await follow_model.find({ follower_id: user_id });
-      const users = await user_model.find({
-        _id: { $in: followed_users },
-      });
+      const users = await user_model
+        .find({
+          _id: {
+            $in: followed_users.map((x) => {
+              return x.followed_id;
+            }),
+          },
+        })
+        .select("-password -email -birthDate -visible_likes");
       return res.status(200).json(users);
     } else {
       return res.status(403).json({ message: "Not following selected user." });
@@ -78,8 +90,8 @@ export const requestResponse = async (req, res) => {
   try {
     const logged_user_id = getUserId(req);
     const request = await follow_model.findOne({
+      _id: request_id,
       followed_id: logged_user_id,
-      follower_id: request_id,
       accepted: false,
     });
     if (action === "accept") {
