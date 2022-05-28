@@ -44,7 +44,7 @@ function getPipeline(user) {
       $lookup: {
         from: "posts",
         localField: "_id",
-        foreignField: "user_id",
+        foreignField: "author",
         as: "posts",
       },
     },
@@ -53,6 +53,7 @@ function getPipeline(user) {
         from: "follows",
         localField: "_id",
         foreignField: "followed_id",
+        pipeline: [{ $match: { accepted: true } }],
         as: "followers",
       },
     },
@@ -61,9 +62,20 @@ function getPipeline(user) {
         from: "follows",
         localField: "_id",
         foreignField: "follower_id",
+        pipeline: [{ $match: { accepted: true } }],
         as: "following",
       },
     },
+    {
+      $addFields: {
+        posts_count: { $size: "$posts" },
+        likes_count: { $size: "$likes" },
+        followers_count: { $size: "$followers" },
+        following_count: { $size: "$following" },
+      },
+    },
+
+    { $project: { _id: 0, likes: 0, followers: 0, following: 0, posts: 0 } },
   ];
   return pipeline;
 }
@@ -102,7 +114,7 @@ export const getUserInfo = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
     const pipeline = getPipeline(user);
-    const userInfo = await User.aggregate(pipeline);
+    const userInfo = await (await User.aggregate(pipeline)).pop();
     return res.status(200).json(userInfo);
   } catch (error) {
     return res.status(500).json(error.message);
