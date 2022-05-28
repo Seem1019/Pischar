@@ -1,7 +1,7 @@
 import post_model from "../models/Post.js";
 import comment_model from "../models/Comment.js";
 import like_model from "../models/Like.js";
-import getUserId from "../utils/jwt.js";
+import { getUserId } from "../utils/jwt.js";
 import saved_model from "../models/Saved_post.js";
 import user_model from "../models/User.js";
 import follow_model from "../models/Follow.js";
@@ -99,7 +99,7 @@ export const likePost = async (req, res) => {
     like
       ? await like_model.deleteOne(like)
       : await like_model.create({ post_id, user_id });
-    return res.status(200);
+    return res.status(200).json({});
   } catch (error) {
     return res.status(500).json(error);
   }

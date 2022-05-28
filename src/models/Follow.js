@@ -19,4 +19,4 @@ const follow = new Schema(
   { versionKey: false }
 );
 
-export default model("Follow", follow);
+export default mongoose.models["Follow"] || model("Follow", follow);

@@ -23,12 +23,12 @@ import followRouter from "./routes/follows";
 app.use(cookieParser());
 app.use(cors());
 
+//Middleware routs
+app.all("*", verifyToken);
+
 app.use("/users", userRouter);
 app.use("/posts", postRouter);
 app.use("/follows", followRouter);
-
-//Middleware routs
-app.all("*", verifyToken);
 
 // DB configuration and connection create
 mongoose.connect(process.env.URL || "mongodb://localhost:27017/pischar", {

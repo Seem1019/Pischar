@@ -19,4 +19,4 @@ const comment = new Schema(
   { versionKey: false }
 );
 
-export default model("Comment", comment);
+export default mongoose.models["Comment"] || model("Comment", comment);

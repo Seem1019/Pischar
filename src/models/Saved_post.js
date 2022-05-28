@@ -7,15 +7,15 @@ const saved_post = new Schema(
     post_id: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      red: "Post",
+      ref: "Post",
     },
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      red: "User",
+      ref: "User",
     },
   },
   { versionKey: false }
 );
 
-export default model("Saved_Post", saved_post);
+export default mongoose.models["Saved_Post"] || model("Saved_Post", saved_post);

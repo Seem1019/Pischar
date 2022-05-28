@@ -14,4 +14,4 @@ const user = new Schema(
   { versionKey: false }
 );
 
-export default model("User", user);
+export default mongoose.models["User"] || model("User", user);

@@ -18,4 +18,4 @@ const like = new Schema(
   { versionKey: false }
 );
 
-export default model("Like", like);
+export default mongoose.models["Like"] || model("Like", like);
