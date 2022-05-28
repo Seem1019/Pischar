@@ -1,44 +1,23 @@
-/* eslint-disable no-undef */
+import {Testapp} from "./appAndtest.modules";
+import mongoose from "mongoose";
 import dotenv from "dotenv";
 dotenv.config();
-import express from "express";
-import mongoose from "mongoose";
-import cors from "cors";
-import cookieParser from "cookie-parser";
-import { verifyToken } from "./middleware/JwtAuth";
 
-const app = express();
-
-//settings
+// eslint-disable-next-line no-undef
 const port = process.env.PORT || 8080;
-app.use(express.json(50));
 
-//routes
-import userRouter from "./routes/users";
-import postRouter from "./routes/posts";
-import followRouter from "./routes/follows";
-
-// Middleware
-app.use(cookieParser());
-app.use(cors());
-
-//Middleware routs
-app.all("*", verifyToken);
-
-app.use("/users", userRouter);
-app.use("/posts", postRouter);
-app.use("/follows", followRouter);
-
+const app = Testapp();
 // DB configuration and connection create
+// eslint-disable-next-line no-undef
 mongoose.connect(process.env.URL || "mongodb://localhost:27017/pischar", {
-  useNewUrlParser: true,
+	useNewUrlParser: true,
 });
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
 db.once("open", function () {
-  console.log("Connected to MongoDB");
+	console.log("Connected to MongoDB");
 });
 
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+	console.log(`Server is running on port ${port}`);
 });
