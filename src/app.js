@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 /* eslint-disable no-undef */
 import dotenv from "dotenv";
 dotenv.config();
@@ -17,16 +16,18 @@ app.use(express.json(50));
 //routes
 import userRouter from "./routes/users";
 import postRouter from "./routes/posts";
+import followRouter from "./routes/follows";
 
 // Middleware
 app.use(cookieParser());
 app.use(cors());
 
-app.use("/users", userRouter);
-app.use("/posts", postRouter);
-
 //Middleware routs
 app.all("*", verifyToken);
+
+app.use("/users", userRouter);
+app.use("/posts", postRouter);
+app.use("/follows", followRouter);
 
 // DB configuration and connection create
 mongoose.connect(process.env.URL || "mongodb://localhost:27017/pischar", {

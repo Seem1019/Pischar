@@ -15,4 +15,4 @@ const post = new Schema(
   { versionKey: false }
 );
 
-export default model("Post", post);
+export default mongoose.models["Post"] || model("Post", post);

@@ -28,6 +28,58 @@ export const register = async (req, res) => {
   }
 };
 
+function getPipeline(user) {
+  const pipeline = [
+    { $match: { username: user.username } },
+    { $project: { username: 1, email: 1, bio: 1 } },
+    {
+      $lookup: {
+        from: "likes",
+        localField: "_id",
+        foreignField: "user_id",
+        as: "likes",
+      },
+    },
+    {
+      $lookup: {
+        from: "posts",
+        localField: "_id",
+        foreignField: "author",
+        as: "posts",
+      },
+    },
+    {
+      $lookup: {
+        from: "follows",
+        localField: "_id",
+        foreignField: "followed_id",
+        pipeline: [{ $match: { accepted: true } }],
+        as: "followers",
+      },
+    },
+    {
+      $lookup: {
+        from: "follows",
+        localField: "_id",
+        foreignField: "follower_id",
+        pipeline: [{ $match: { accepted: true } }],
+        as: "following",
+      },
+    },
+    {
+      $addFields: {
+        posts_count: { $size: "$posts" },
+        likes_count: { $size: "$likes" },
+        followers_count: { $size: "$followers" },
+        following_count: { $size: "$following" },
+      },
+    },
+
+    { $project: { _id: 0, likes: 0, followers: 0, following: 0, posts: 0 } },
+  ];
+  return pipeline;
+}
+
 export const login = async (req, res) => {
   const { username, password } = req.body;
   const user_id = getUserId(req);
@@ -47,5 +99,24 @@ export const login = async (req, res) => {
     }
   } else {
     return res.status(200).json({ message: "You are already logged in" });
+  }
+};
+
+export const getUserInfo = async (req, res) => {
+  const user_id = req.query.user_id;
+  if (!user_id) {
+    return res.status(400).json({ message: "Missing user id." });
+  }
+
+  try {
+    const user = await User.findOne({ _id: user_id });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const pipeline = getPipeline(user);
+    const userInfo = (await User.aggregate(pipeline)).pop();
+    return res.status(200).json(userInfo);
+  } catch (error) {
+    return res.status(500).json(error.message);
   }
 };

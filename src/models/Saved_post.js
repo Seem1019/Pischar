@@ -2,21 +2,20 @@ import mongoose from "mongoose";
 
 const { Schema, model } = mongoose;
 
-const comment = new Schema(
+const saved_post = new Schema(
   {
-    user_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: "User",
-    },
     post_id: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       ref: "Post",
     },
-    comment: { type: String, required: true },
+    user_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "User",
+    },
   },
   { versionKey: false }
 );
 
-export default mongoose.models["Comment"] || model("Comment", comment);
+export default mongoose.models["Saved_Post"] || model("Saved_Post", saved_post);

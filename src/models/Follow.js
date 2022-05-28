@@ -4,11 +4,19 @@ const { Schema, model } = mongoose;
 
 const follow = new Schema(
   {
-    display_name: { type: String, required: true },
-    username: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    followed_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "User",
+    },
+    follower_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "User",
+    },
+    accepted: { type: Boolean, required: true, default: false },
   },
   { versionKey: false }
 );
 
-export default model("Follow", follow);
+export default mongoose.models["Follow"] || model("Follow", follow);

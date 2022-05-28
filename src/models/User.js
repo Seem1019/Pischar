@@ -9,8 +9,9 @@ const user = new Schema(
     email: { type: String, required: true, unique: true },
     bio: { type: String, required: false },
     birthDate: { type: Date, required: true },
+    visible_likes: { type: Boolean, required: true, default: true },
   },
   { versionKey: false }
 );
 
-export default model("User", user);
+export default mongoose.models["User"] || model("User", user);
