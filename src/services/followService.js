@@ -3,7 +3,7 @@ import follow_model from "../models/Follow.js";
 import user_model from "../models/User.js";
 
 export const fetchFollowers = async (req, res) => {
-  const user_id = req.body.user_id;
+  const user_id = req.query.user_id;
   try {
     const logged_user_id = getUserId(req);
     const following = await follow_model.findOne({
@@ -26,7 +26,7 @@ export const fetchFollowers = async (req, res) => {
 };
 
 export const fetchFollowing = async (req, res) => {
-  const user_id = req.body/user_id;
+  const user_id = req.query.user_id;
   try {
     const logged_user_id = getUserId(req);
     const following = await follow_model.findOne({
@@ -37,7 +37,7 @@ export const fetchFollowing = async (req, res) => {
     if (following || user_id === logged_user_id) {
       const followed_users = await follow_model.find({ follower_id: user_id });
       const users = await user_model.find({
-        _id: { $in: followed_users.followed_id },
+        _id: { $in: followed_users },
       });
       return res.status(200).json(users);
     } else {
@@ -52,19 +52,22 @@ export const requestFollow = async (req, res) => {
   const user_id = req.body.user_id;
   try {
     const logged_user_id = getUserId(req);
-    const request = await follow_model.findOne({
-      followed_id: user_id,
-      follower_id: logged_user_id
-    });
-    if (!request) {
-      await follow_model.create({
+    if (user_id !== logged_user_id) {
+      const request = await follow_model.findOne({
         followed_id: user_id,
         follower_id: logged_user_id
       });
-    } else {
-      return res.status(400).json({ message: "Request already exists." });
+      if (!request) {
+        await follow_model.create({
+          followed_id: user_id,
+          follower_id: logged_user_id
+        });
+      } else {
+        return res.status(400).json({ message: "Request already exists." });
+      }
+      return res.status(201).json({});
     }
-    return res.status(201).json({});
+    return res.status(400).json({message: "Can't follow oneself."});
   } catch (error) {
     return res.status(500).json(error);
   }
