@@ -1,4 +1,5 @@
-export const mdb = {
+/* eslint-disable no-undef */
+module.exports = {
 	mongodbMemoryServerOptions: {
 		binary: {
 			skipMD5: true,
