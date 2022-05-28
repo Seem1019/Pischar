@@ -5,7 +5,7 @@ dotenv.config();
 export const verifyToken = (req, res, next) => {
   if (
     req.path === "/users/login" ||
-    (req.path === "/users/register" && req.method === "POST")
+    (req.path === "/users/" && req.method === "POST")
   ) {
     next();
   } else {

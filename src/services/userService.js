@@ -1,4 +1,3 @@
-/* eslint-disable no-dupe-keys */
 import { hashPassword, comparePassword } from "../utils/bcrypt.js";
 import User from "../Models/User.js";
 import { generateToken, getUserId } from "../utils/jwt.js";
@@ -29,6 +28,46 @@ export const register = async (req, res) => {
   }
 };
 
+function getPipeline(user) {
+  const pipeline = [
+    { $match: { username: user.username } },
+    { $project: { username: 1, email: 1, bio: 1 } },
+    {
+      $lookup: {
+        from: "likes",
+        localField: "_id",
+        foreignField: "user_id",
+        as: "likes",
+      },
+    },
+    {
+      $lookup: {
+        from: "posts",
+        localField: "_id",
+        foreignField: "user_id",
+        as: "posts",
+      },
+    },
+    {
+      $lookup: {
+        from: "follows",
+        localField: "_id",
+        foreignField: "followed_id",
+        as: "followers",
+      },
+    },
+    {
+      $lookup: {
+        from: "follows",
+        localField: "_id",
+        foreignField: "follower_id",
+        as: "following",
+      },
+    },
+  ];
+  return pipeline;
+}
+
 export const login = async (req, res) => {
   const { username, password } = req.body;
   const user_id = getUserId(req);
@@ -57,48 +96,14 @@ export const getUserInfo = async (req, res) => {
     return res.status(400).json({ message: "Missing user id." });
   }
 
-  const pipeline = [
-    { $match: { _id: user_id } },
-    { $project: { username: 1, email: 1, bio: 1 } },
-    {
-      $lookup: {
-        from: "like",
-        localField: "_id",
-        foreignField: "user_id",
-        as: "likes",
-      },
-    },
-    {
-      $lookup: {
-        from: "Post",
-        localField: "_id",
-        foreignField: "user_id",
-        as: "posts",
-      },
-    },
-    {
-      $lookup: {
-        from: "follow",
-        localField: "_id",
-        foreignField: "user_id",
-        as: "followers",
-      },
-    },
-    {
-      $lookup: {
-        from: "follow",
-        localField: "_id",
-        foreignField: "follower_id",
-        as: "following",
-      },
-    },
-  ];
   try {
-    if (!(await User.findById(user_id))) {
+    const user = await User.findOne({ _id: user_id });
+    if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    const user = await User.aggregate(pipeline);
-    return res.status(200).json(user);
+    const pipeline = getPipeline(user);
+    const userInfo = await User.aggregate(pipeline);
+    return res.status(200).json(userInfo);
   } catch (error) {
     return res.status(500).json(error.message);
   }
