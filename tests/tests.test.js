@@ -1,13 +1,23 @@
 /* eslint-disable no-undef */
-import mongoose from "mongoose";
+import mongoose, {mongo} from "mongoose";
 import request from "supertest";
 import {Testapp} from "../src/appAndtest.modules";
+import jwt from "jsonwebtoken";
+
 // import {MongoMemoryServer} from "mongodb-memory-server";
 // const {MongoClient} = require("mongodb");
 
 // ------------------------------------------
-let _body;
-let _body2;
+let user1;
+let user_id_1;
+let num_pub_user_1;
+let post_user_1_1;
+let post_user_1_2;
+// ------------------------
+let user2;
+let user_id_2;
+let user3;
+let user_id_3;
 
 describe("Register", () => {
 	let app;
@@ -28,8 +38,9 @@ describe("Register", () => {
 			bio: "Khe kheee toma mangooo",
 		});
 
-		_body = {token: body};
-		expect(_body).toBeDefined();
+		user1 = body;
+		user_id_1 = {user_id: jwt.verify(user1.token, "secret").user_id};
+		expect(body).toBeDefined();
 		expect(status).toBe(201);
 	});
 
@@ -93,20 +104,32 @@ describe("Register", () => {
 			birthDate: "2001/03/31",
 			// bio: "Khe kheee toma mangooo",
 		});
-		_body2 = {token: body};
+		user2 = body;
+		user_id_2 = {user_id: jwt.verify(user2.token, "secret").user_id};
 		expect(status).toBe(201);
 		expect(body).toBeDefined();
 	});
+
+	test("Getting another user for future", async () => {
+		const {status, body} = await request(app).post("/users/").send({
+			username: "Sergio",
+			password: "123456",
+			email: "Sergio@uninorte.edu.co",
+			birthDate: "1998/09/01",
+			bio: "Khe kheee toma aguacate",
+		});
+
+		user3 = body;
+		user_id_3 = {user_id: jwt.verify(user3.token, "secret").user_id};
+		expect(body).toBeDefined();
+		expect(status).toBe(201);
+	});
 });
 
-describe("Generar un JWT de sesión", () => {
+describe("Login working", () => {
 	let app;
 	beforeAll(() => {
 		app = Testapp();
-	});
-
-	afterAll(() => {
-		mongoose.connection.close();
 	});
 
 	test("login with user and password", async () => {
@@ -119,7 +142,7 @@ describe("Generar un JWT de sesión", () => {
 	});
 
 	test("Login succesful", async () => {
-		const {status, body} = await request(app).post("/users/login").send(_body);
+		const {status, body} = await request(app).post("/users/login").send(user1);
 		expect(status).toBe(200);
 		expect(body).toEqual({});
 	});
@@ -140,5 +163,161 @@ describe("Generar un JWT de sesión", () => {
 
 		expect(status).toBe(401);
 		expect(body).toEqual({message: "Invalid password"});
+	});
+});
+
+describe("Adding a like", () => {
+	let app;
+	beforeAll(() => {
+		app = Testapp();
+	});
+
+	test("creating 3 publications by user 1, also creating 1 publication by user 2 and 3", async () => {
+		// ------------------Creando 3 publicaciones para usuario 1
+		{
+			const img_url =
+				"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT3c-RW0MF_lm5YsTO_SszuWEdkLPxuI7EKjSOcZnzowgGxEnaPhHrRb18kT6x5mAOVeqA&usqp=CAU";
+			const bio = "Hola este es un lindo gatito";
+			const {status, body} = await request(app)
+				.post("/posts/")
+				.set("token", user1.token)
+				.send({img_url, bio, author: user_id_1.user_id});
+
+			expect(status).toBe(201);
+			expect(body).toBeDefined();
+		}
+
+		{
+			const img_url =
+				"https://i.pinimg.com/736x/9c/5d/3a/9c5d3a8caa045e8db8cb3263539a966b.jpg";
+			const bio = "Hola este es otro lindo gatito";
+			const {status, body} = await request(app)
+				.post("/posts/")
+				.set("token", user1.token)
+				.send({img_url, bio, author: user_id_1.user_id});
+
+			expect(status).toBe(201);
+			expect(body).toBeDefined();
+		}
+
+		{
+			const img_url =
+				"https://i.pinimg.com/564x/79/28/ed/7928ede53423e03dc81646b4528c0242.jpg";
+			const bio = "Hola este es un lindo perrito";
+			const {status, body} = await request(app)
+				.post("/posts/")
+				.set("token", user1.token)
+				.send({img_url, bio, author: user_id_1.user_id});
+
+			expect(status).toBe(201);
+			expect(body).toBeDefined();
+		}
+
+		// -----------Creando una publicacion usuario 2
+		{
+			const img_url =
+				"https://s2.best-wallpaper.net/wallpaper/2880x1800/1909/Cute-puppy-box_2880x1800.jpg";
+			const bio = "Perro";
+			const {status, body} = await request(app)
+				.post("/posts/")
+				.set("token", user2.token)
+				.send({img_url, bio, author: user_id_2.user_id});
+
+			expect(status).toBe(201);
+			expect(body).toBeDefined();
+		}
+		// -----------Creando una publicacion usuario 3
+		{
+			const img_url =
+				"https://w0.peakpx.com/wallpaper/453/1015/HD-wallpaper-puppy-cute-rachael-hale-caine-paw-white-dog-animal.jpg";
+			const bio = "wauu";
+			const {status, body} = await request(app)
+				.post("/posts/")
+				.set("token", user3.token)
+				.send({img_url, bio, author: user_id_3.user_id});
+
+			expect(status).toBe(201);
+			expect(body).toBeDefined();
+		}
+	});
+
+	test("Giving like", async () => {
+		// getting post_id
+		{
+			const {status, body} = await request(app)
+				.get("/posts/")
+				.set("token", user1.token)
+				.query({author: user_id_1.user_id});
+
+			expect(status).toBe(200);
+			expect(body).toBeDefined();
+			post_user_1_1 = body[0]._id;
+			post_user_1_2 = body[1]._id;
+		}
+		// user 2 giving like to post by user 1
+		{
+			const {status} = await request(app)
+				.post("/posts/like")
+				.set("token", user2.token)
+				.send({post_id: post_user_1_1});
+			expect(status).toBe(200);
+		}
+	});
+});
+
+describe("followers", () => {
+	let app;
+	beforeAll(() => {
+		app = Testapp();
+	});
+
+	test("user 2 asks to follow user 1", async () => {
+		const {status} = await request(app)
+			.post("/follows/request")
+			.set("token", user_id_2.user_id)
+			.send(user_id_1);
+		expect(status).toBe(201);
+	});
+	// ----------- Working
+	// test("User 1 accepts user's 2 request ", async () => {
+	// 	const {status}=await request(app).post("/follows/response") por terminar
+	// });
+});
+
+describe("User's information", () => {
+	let app;
+	beforeAll(() => {
+		app = Testapp();
+	});
+
+	test("No birthDate And password information", async () => {
+		let {body} = await request(app)
+			.get("/users/")
+			.set("token", user1.token)
+			.query(user_id_1);
+		expect(body).toBeDefined();
+		expect(body.error).toBeUndefined();
+		expect(body.password).toBeUndefined();
+		expect(body.birthDate).toBeUndefined();
+	});
+
+	test("Expecting 3 publications by user 1", async () => {
+		const {status, body} = await request(app)
+			.get("/users/")
+			.set("token", user1.token)
+			.query(user_id_1);
+
+		expect(status).toBe(200);
+		expect(body.posts_count).toBe(3);
+	});
+});
+
+describe("Finishing correctly ", () => {
+	beforeAll(async () => {
+		await mongoose.connection.close();
+	});
+
+	test("mongoDB closed ", async () => {
+		expect(mongoose.connection.readyState).toBe(0);
 	});
 });

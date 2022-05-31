@@ -1,12 +1,13 @@
 /* eslint-disable no-undef */
 module.exports = {
-  mongodbMemoryServerOptions: {
-    binary: {
-      skipMD5: true,
-    },
-    autoStart: false,
-    instance: {},
-  },
+	mongodbMemoryServerOptions: {
+		binary: {
+			version: "5.0.3",
+			skipMD5: true,
+		},
+		autoStart: false,
+		instance: {},
+	},
 
-  useSharedDBForAllJestWorkers: false,
+	useSharedDBForAllJestWorkers: false,
 };
