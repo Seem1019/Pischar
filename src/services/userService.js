@@ -1,5 +1,5 @@
 import { hashPassword, comparePassword } from "../utils/bcrypt.js";
-import User from "../Models/User.js";
+import User from "../models/User.js";
 import { generateToken, getUserId } from "../utils/jwt.js";
 import { schemaRegister, schemaLogin } from "../utils/Joi.js";
 
@@ -22,7 +22,7 @@ export const register = async (req, res) => {
       bio,
     });
     const token = generateToken(user);
-    return res.status(201).json(token);
+    return res.status(201).json({ token });
   } catch (error) {
     return res.status(500).json(error.message);
   }
@@ -51,18 +51,30 @@ function getPipeline(user) {
     {
       $lookup: {
         from: "follows",
-        localField: "_id",
-        foreignField: "followed_id",
-        pipeline: [{ $match: { accepted: true } }],
+
+        pipeline: [
+          {
+            $match: {
+              accepted: true,
+              followed_id: { $in: [user._id] },
+            },
+          },
+        ],
         as: "followers",
       },
     },
     {
       $lookup: {
         from: "follows",
-        localField: "_id",
-        foreignField: "follower_id",
-        pipeline: [{ $match: { accepted: true } }],
+
+        pipeline: [
+          {
+            $match: {
+              accepted: true,
+              follower_id: { $in: [user._id] },
+            },
+          },
+        ],
         as: "following",
       },
     },
@@ -93,12 +105,12 @@ export const login = async (req, res) => {
         return res.status(401).json({ message: "Invalid password" });
       }
       const token = generateToken(user);
-      return res.status(200).json(token);
+      return res.status(200).json({ token });
     } catch (error) {
       return res.status(500).json({ error });
     }
   } else {
-    return res.status(200).json({ message: "You are already logged in" });
+    return res.status(200).json({});
   }
 };
 
@@ -117,6 +129,7 @@ export const getUserInfo = async (req, res) => {
     const userInfo = (await User.aggregate(pipeline)).pop();
     return res.status(200).json(userInfo);
   } catch (error) {
+    error;
     return res.status(500).json(error.message);
   }
 };

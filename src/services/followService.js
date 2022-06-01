@@ -108,3 +108,17 @@ export const requestResponse = async (req, res) => {
     return res.status(500).json(error);
   }
 };
+
+// Endpoint only for tests.
+export const followRequests = async (req, res) => {
+  try {
+    const logged_user_id = getUserId(req);
+    const requests = await follow_model.find({
+      followed_id: logged_user_id,
+      accepted: false,
+    });
+    return res.status(200).json(requests);
+  } catch (error) {
+    return res.status(500).json(error);
+  }
+};

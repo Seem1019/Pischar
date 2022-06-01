@@ -7,5 +7,6 @@ router.get("/following", follow_service.fetchFollowing);
 router.get("/followers", follow_service.fetchFollowers);
 router.post("/request", follow_service.requestFollow);
 router.post("/response", follow_service.requestResponse);
+router.get("/follow-requests", follow_service.followRequests);
 
 export default router;
