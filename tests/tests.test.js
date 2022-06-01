@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-import mongoose, {mongo} from "mongoose";
+import mongoose from "mongoose";
 import request from "supertest";
 import {Testapp} from "../src/appAndtest.modules";
 import jwt from "jsonwebtoken";
@@ -166,7 +166,7 @@ describe("Login", () => {
 	});
 });
 
-describe("Adding a like", () => {
+describe("Posts", () => {
 	let app;
 	beforeAll(() => {
 		app = Testapp();
@@ -255,6 +255,7 @@ describe("Adding a like", () => {
 			post_user_1_2 = body[1]._id;
 		}
 		// user 2 giving like to post by user 1
+		// 1 like
 		{
 			const {status} = await request(app)
 				.post("/posts/like")
@@ -262,6 +263,94 @@ describe("Adding a like", () => {
 				.send({post_id: post_user_1_1});
 			expect(status).toBe(200);
 		}
+	});
+
+	test("waiting for posts liked by user 2 to be 2 ", async () => {
+		{
+			const {status, body} = await request(app)
+				.post("/posts/like")
+				.set("token", user2.token)
+				.send({post_id: post_user_1_2});
+			expect(body).toEqual({});
+			expect(status).toBe(200);
+		}
+
+		{
+			const {status, body} = await request(app)
+				.get("/posts/liked-by")
+				.set("token", user2.token)
+				.query(user_id_2);
+			expect(body.length).toBe(2);
+			expect(status).toBe(200);
+		}
+	});
+
+	// Two posts saved by user 2
+	test("Save posts", async () => {
+		{
+			const {status, body} = await request(app)
+				.post("/posts/save")
+				.set("token", user2.token)
+				.send({post_id: post_user_1_1});
+
+			expect(status).toBe(200);
+			expect(body).toEqual({});
+		}
+
+		{
+			const {status, body} = await request(app)
+				.post("/posts/save")
+				.set("token", user2.token)
+				.send({post_id: post_user_1_2});
+
+			expect(status).toBe(200);
+			expect(body).toEqual({});
+		}
+	});
+
+	test("Number of saved posts: Expected number (2)", async () => {
+		{
+			const {status, body} = await request(app)
+				.get("/posts/saved-by")
+				.set("token", user2.token)
+				.query({});
+
+			expect(status).toBe(200);
+			expect(body.length).toBe(2);
+		}
+	});
+
+	test("commenting a publication", async () => {
+		// Adding two comments
+		{
+			const {status, body} = await request(app)
+				.post("/posts/")
+				.set("token", user2.token)
+				.send({post_id: post_user_1_1, comment: "Que bonito"});
+
+			expect(status).toBe(200);
+			expect(body).toEqual({});
+		}
+
+		{
+			const {status, body} = await request(app)
+				.post("/posts/")
+				.set("token", user3.token)
+				.send({post_id: post_user_1_1, comment: "Si, esta muy bonito"});
+
+			expect(status).toBe(200);
+			expect(body).toEqual({});
+		}
+	});
+
+	test("getting comments from a publications: expected 2 comments", async () => {
+		const {status, body} = await request(app)
+			.get("/posts/")
+			.set("token", user1.token)
+			.send({post_id: post_user_1_1});
+
+		expect(status).toBe(200);
+		expect(body.comments.length).toBe(2);
 	});
 });
 
@@ -353,7 +442,59 @@ describe("followers", () => {
 			expect(body[0]).toBeUndefined();
 		}
 	});
+
+	// Algo bien extraño sucede en conseguir la follow list
+	test("followers list: user 2: expected 1", async () => {
+		// User 3 follows user 2
+
+		{
+			{
+				const {status, body} = await request(app)
+					.post("/follows/request")
+					.set("token", user3.token)
+					.send(user_id_2);
+
+				expect(status).toBe(201);
+				expect(body).toEqual({});
+			}
+
+			{
+				let request_id;
+				{
+					const {body} = await request(app)
+						.get("/follows/follow-requests")
+						.set("token", user2.token);
+					expect(body).toBeDefined();
+
+					request_id = body[0]._id;
+				}
+
+				{
+					const {status, body} = await request(app)
+						.post("/follows/response")
+						.set("token", user2.token)
+						.send({request_id, action: "accept"});
+
+					expect(status).toBe(200);
+					expect(body).toBeDefined();
+				}
+			}
+		}
+
+		{
+			const {status, body} = await request(app)
+				.get("/follows/followers")
+				.set("token", user2.token)
+				.query({user_id_3});
+
+			expect(status).toBe(200);
+			expect(body).toBeDefined();
+		}
+	});
+	// -------------------------------------------------------------------
 });
+
+// describe("");
 
 describe("User's information", () => {
 	let app;
@@ -383,7 +524,7 @@ describe("User's information", () => {
 	});
 });
 
-describe("Finishing correctly ", () => {
+describe("Finished correctly ", () => {
 	beforeAll(async () => {
 		await mongoose.connection.close();
 	});
