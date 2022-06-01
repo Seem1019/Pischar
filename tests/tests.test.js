@@ -570,6 +570,26 @@ describe("User's information", () => {
 		expect(status).toBe(200);
 		expect(body.likes_count).toBe(2);
 	});
+
+	test("expecting followers: 1", async () => {
+		const {status, body} = await request(app)
+			.get("/users/")
+			.set("token", user3.token)
+			.query(user_id_3);
+
+		expect(status).toBe(200);
+		expect(body.followers_count).toBe(1);
+	});
+
+	test("expecting following: 1", async () => {
+		const {status, body} = await request(app)
+			.get("/users/")
+			.set("token", user3.token)
+			.query(user_id_3);
+
+		expect(status).toBe(200);
+		expect(body.following_count).toBe(1);
+	});
 });
 
 describe("Finished correctly ", () => {
