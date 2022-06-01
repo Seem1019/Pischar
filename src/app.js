@@ -1,4 +1,4 @@
-import { Testapp } from "./appAndtest.modules";
+import { TestApp } from "./appAndTest.modules";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 dotenv.config();
@@ -6,7 +6,7 @@ dotenv.config();
 // eslint-disable-next-line no-undef
 const port = process.env.PORT || 8080;
 
-const app = Testapp();
+const app = TestApp();
 // DB configuration and connection create
 // eslint-disable-next-line no-undef
 mongoose.connect(process.env.URL || "mongodb://localhost:27017/pischar", {

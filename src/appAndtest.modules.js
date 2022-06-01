@@ -10,7 +10,7 @@ import userRouter from "./routes/users";
 import postRouter from "./routes/posts";
 import followRouter from "./routes/follows";
 
-export function Testapp() {
+export function TestApp() {
   const app = express();
 
   //settings
