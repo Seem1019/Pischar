@@ -56,8 +56,7 @@ function getPipeline(user) {
           {
             $match: {
               accepted: true,
-              localField: "_id",
-              foreignField: "followed_id",
+              followed_id: { $in: [user._id] },
             },
           },
         ],
@@ -72,8 +71,7 @@ function getPipeline(user) {
           {
             $match: {
               accepted: true,
-              localField: "_id",
-              foreignField: "follower_id",
+              follower_id: { $in: [user._id] },
             },
           },
         ],
