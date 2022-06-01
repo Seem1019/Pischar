@@ -10,7 +10,6 @@ import jwt from "jsonwebtoken";
 // ------------------------------------------
 let user1;
 let user_id_1;
-let num_pub_user_1;
 let post_user_1_1;
 let post_user_1_2;
 // ------------------------
@@ -476,7 +475,7 @@ describe("followers", () => {
 						.send({request_id, action: "accept"});
 
 					expect(status).toBe(200);
-					expect(body).toBeDefined();
+					expect(body).toEqual({});
 				}
 			}
 		}
@@ -484,14 +483,55 @@ describe("followers", () => {
 		{
 			const {status, body} = await request(app)
 				.get("/follows/followers")
-				.set("token", user2.token)
-				.query({user_id_3});
+				.set("token", user3.token)
+				.query(user_id_2);
 
 			expect(status).toBe(200);
-			expect(body).toBeDefined();
+			expect(body).toHaveLength(1);
 		}
 	});
-	// -------------------------------------------------------------------
+
+	test("Following list by user 3 : expected 1", async () => {
+		{
+			const {status, body} = await request(app)
+				.post("/follows/request")
+				.set("token", user2.token)
+				.send(user_id_3);
+
+			expect(status).toBe(201);
+			expect(body).toEqual({});
+		}
+
+		let request_id;
+		{
+			const {body} = await request(app)
+				.get("/follows/follow-requests")
+				.set("token", user3.token);
+			expect(body).toBeDefined();
+
+			request_id = body[0]._id;
+		}
+
+		{
+			const {status, body} = await request(app)
+				.post("/follows/response")
+				.set("token", user3.token)
+				.send({request_id, action: "accept"});
+
+			expect(status).toBe(200);
+			expect(body).toEqual({});
+		}
+
+		{
+			const {status, body} = await request(app)
+				.get("/follows/following")
+				.set("token", user2.token)
+				.query(user_id_3);
+
+			expect(status).toBe(200);
+			expect(body).toHaveLength(1);
+		}
+	});
 });
 
 // describe("");
@@ -521,6 +561,16 @@ describe("User's information", () => {
 
 		expect(status).toBe(200);
 		expect(body.posts_count).toBe(3);
+	});
+
+	test("liked publications by user 2: expected 2", async () => {
+		const {status, body} = await request(app)
+			.get("/users/")
+			.set("token", user2.token)
+			.query(user_id_2);
+
+		expect(status).toBe(200);
+		expect(body.likes_count).toBe(2);
 	});
 });
 
