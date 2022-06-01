@@ -534,8 +534,6 @@ describe("followers", () => {
 	});
 });
 
-// describe("");
-
 describe("User's information", () => {
 	let app;
 	beforeAll(() => {
